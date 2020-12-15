@@ -1,0 +1,25 @@
+#!/bin/bash
+# Set default chain policies
+
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+
+#traffic pythonnnn
+iptables -I INPUT -p tcp --dport 1234 -j ACCEPT
+iptables -I INPUT -p tcp --dport 4321 -j ACCEPT
+
+#acepto trafico a mi webserver porque me incha las bolas las vm briggeadas
+iptables -I INPUT -p tcp --dport 80 -j ACCEPT
+iptables -I INPUT -p tcp --dport 443 -j ACCEPT
+
+# Accept on localhost
+iptables -A INPUT -i lo -j ACCEPT
+
+for i in lo eth0 eth1 vmnet1 vmnet8
+do
+	iptables -A OUTPUT -o $i -j ACCEPT
+        iptables -I INPUT -i $i -p udp --dport 67:68 --sport 67:68 -j ACCEPT
+done
+# Allow established sessions to receive traffic
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
